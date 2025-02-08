@@ -3,48 +3,40 @@ package com.example.controller;
 import com.example.model.User;
 import com.example.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api")
 public class AuthController {
 
     @Autowired
     private AuthService authService;
 
-    @GetMapping("/signup")
-    public String signupPage() {
-        return "signup";
-    }
-
+    // Sign-Up Endpoint
     @PostMapping("/signup")
-    public String signUp(@ModelAttribute User user, Model model) {
-        authService.signUp(user);
-        model.addAttribute("message", "Congrats! Account created successfully");
-        model.addAttribute("name", user.getFirstName());
-        return "home";
+    public ResponseEntity<?> signUp(@RequestBody User user) {
+        try {
+            authService.signUp(user);
+            return ResponseEntity.ok("Congrats! Account created successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
     }
 
-    @GetMapping("/signin")
-    public String signinPage() {
-        return "signin";
-    }
-
+    // Sign-In Endpoint
     @PostMapping("/signin")
-    public String signIn(@RequestParam String email, @RequestParam String password, Model model) {
-        return authService.signIn(email, password).map(user -> {
-            model.addAttribute("name", user.getFirstName());
-            return "home";
-        }).orElseGet(() -> {
-            model.addAttribute("error", "Please enter valid email or password");
-            return "signin";
-        });
-    }
+    public ResponseEntity<?> signIn(@RequestBody User loginRequest) {
+        Optional<User> userOptional = authService.signIn(loginRequest.getEmail(), loginRequest.getPassword());
 
-    @GetMapping("/logout")
-    public String logout() {
-        return "signin";
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            return ResponseEntity.ok(user); // Return the authenticated user object as a JSON response
+        } else {
+            return ResponseEntity.status(401).body("Invalid email or password."); // Authentication failed
+        }
     }
 }
 
