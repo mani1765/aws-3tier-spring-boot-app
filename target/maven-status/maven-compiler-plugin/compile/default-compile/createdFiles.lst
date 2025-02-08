@@ -1,0 +1,5 @@
+com/example/service/AuthService.class
+com/example/model/User.class
+com/example/repository/UserRepository.class
+com/example/SpringBootAws3TierApplication.class
+com/example/controller/AuthController.class
